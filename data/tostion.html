@@ -1,0 +1,281 @@
+<!--Desarrollado por Dynamics Maker
+	Algunas librerías fueron tomadas de la web.
+	Algunas librerías se modificaron por los desarrolladores para cubrir la necesidad del proyecto-->
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Tostión</title>
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<script src="jquery-3.3.1.min.js"></script>
+	<script src="exporting.js"></script>
+	<script src="popper.min.js"></script>
+	<script src="bootstrap.min.js"></script>
+	<script src="raphael-2.1.4.min.js"> </script>
+	<script src="justgage.js"> </script>
+	<script src="highcharts.js"></script>
+	
+
+	<style>
+
+		.card {
+			min-height: 350px;
+		}
+		.card-body {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+    </style>
+</head>
+<body>
+	
+	<h1 style="text-align: center;margin-top:5% ;">Proceso de tostión.</h1>
+	<div style="text-align: center;margin-top:50px;"><input type="button" class="btn btn-warning" onclick='alert("Datos guardados en la sd")' value="Descargar"></input></div>
+	<div class="chronometer" style="text-align: center;">
+		<div id="screen" style="font-size: xx-large;margin-bottom: 1%;">00 : 00 : 00 : 00</div>
+		<div class="buttons">	
+			<button class="start" onclick="start()" style="margin:auto;">Empezar &#8780;</button>	
+			<button class="emerald" onclick="stop()" style="margin:auto;">Detener &#8718;</button>
+			<button class="emerald" onclick="resume()" style="margin:auto;">Continuar &#8634;</button>
+			<button class="emerald" onclick="direccionamiento()" style="margin:auto;">RESET &#8635;</button>
+		</div>
+	</div>
+	
+	<div class="container-fluid">
+		<div class="row h-100" style="margin: auto;">
+		
+			<div class="col-md-3 offset-md-2 my-auto">
+				<div class="card">
+					<div class="card-header text-center">
+						<strong>Temperatura</strong>
+					</div>
+					<div class="card-body text-center">
+						<div id="gauge_temp" style="width:250px; height:250px"></div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-md-5 my-auto">
+				<div class="card">
+					<div class="card-header text-center">
+						<strong>Temperatura Histórica</strong>
+					</div>
+					<div class="card-body text-center" id="chart_container">
+						<div id="chart_temperature"></div>
+					</div>
+				</div>		
+			</div>
+		</div>
+		<div>Desarrollado por: Dynamics Maker® </div>			
+		<div>Juan "Súper"</div>	
+	</div>
+	<script>
+
+var isMarch = false; 
+var acumularTime = 0; 
+
+
+$(document).ready(function(){
+	$(".start").click();
+});
+
+
+
+function direccionamiento(){
+
+window.location.href="index.html";
+
+}
+
+
+
+function Empezar()
+{
+	if(onload)
+	{
+			timeInicial = new Date();
+            control = setInterval(cronometro,10);
+            isMarch = true;
+			}
+	else
+	{
+
+	}		
+}
+
+
+
+function start () {
+         if (isMarch == false) { 
+            timeInicial = new Date();
+            control = setInterval(cronometro,10);
+            isMarch = true;
+            }
+         }
+function cronometro () { 
+         timeActual = new Date();
+         acumularTime = timeActual - timeInicial;
+         acumularTime2 = new Date();
+         acumularTime2.setTime(acumularTime); 
+         cc = Math.round(acumularTime2.getMilliseconds()/10);
+         ss = acumularTime2.getSeconds();
+         mm = acumularTime2.getMinutes();
+         hh = acumularTime2.getHours()-19;
+         if (cc < 10) {cc = "0"+cc;}
+         if (ss < 10) {ss = "0"+ss;} 
+         if (mm < 10) {mm = "0"+mm;}
+         if (hh < 10) {hh = "0"+hh;}
+         pantalla.innerHTML = hh+" : "+mm+" : "+ss+" : "+cc;
+         }
+
+function stop () { 
+         if (isMarch == true) {
+            clearInterval(control);
+            isMarch = false;
+            }     
+         }      
+
+function resume () {
+         if (isMarch == false) {
+            timeActu2 = new Date();
+            timeActu2 = timeActu2.getTime();
+            acumularResume = timeActu2-acumularTime;
+            
+            timeInicial.setTime(acumularResume);
+            control = setInterval(cronometro,10);
+            isMarch = true;
+            }     
+         }
+
+function reset () {
+         if (isMarch == true) {
+            clearInterval(control);
+            isMarch = false;
+            }
+         acumularTime = 0;
+         pantalla.innerHTML = "00 : 00 : 00 : 00";
+         }
+
+
+
+
+		var gauge_temp;
+		gauge_temp = new JustGage({
+			id: "gauge_temp",
+			min: -15,
+			max: 300,
+			donut: false,
+			pointer: true,
+			gaugeWidthScale: 0.5,
+			counter: true,
+			hideInnerShadow: true,
+			title: "",
+			titlePosition: "below",
+			levelColors: ["#0C828E", "#ffa800", "#FF5202"],
+			titleFontColor : "#292b2c",
+			label: "°C",
+			labelFontColor: "#292b2c",
+			labelMinFontSize: 16,
+			relativeGaugeSize: true
+		});
+
+		setInterval(function() {
+			var xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					gauge_temp.refresh(parseInt(this.responseText));
+					console.log(this.responseText);				
+					obj = JSON.parse(xhttp.responseText);
+				
+				}
+			};
+			xhttp.open("GET", "/temperature", true);
+			xhttp.send();
+		}, 2000);
+
+		// *** Gráfico histórico de la temperatura ***
+		var chartTemp = new Highcharts.Chart({
+			chart: {
+				renderTo : 'chart_temperature'
+			},
+			title: {
+				text: 'Tiempo'
+			},
+			series: [{
+				showInLegend: false,
+				data: []
+			}],
+			plotOptions: {
+				line: {					
+					animation: false,
+					dataLabels: {
+						enabled: true
+					}
+				},
+				series: {
+					color: '#0C828E',
+					pointStart:0
+				}
+			},
+			xAxis: { 
+				type: 'getTime',
+				dateTimeLabelFormats: {
+					second: '%H:%M:%S'
+				}
+			},
+			yAxis: {
+				title: {
+					text: 'Temperatura en grados celsius.'
+				}
+			},
+			credits: {
+				enabled: false
+			}
+		});
+
+		$("#chart_temperature").highcharts().setSize($("#chart_container").width(), 250);
+		$(window).on('resize', function(){
+			$("#chart_temperature").highcharts().setSize($("#chart_container").width(), 250);
+		});
+		
+		setInterval(function() {
+			var xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					var x = (new Date()).getTime();
+					var y = parseInt(this.responseText);
+
+					if (chartTemp.series[0].data.length > 40) {
+						chartTemp.series[0].addPoint([x, y], true, true, true);
+					} else {
+						chartTemp.series[0].addPoint([x, y], true, false, true);
+					}	
+				}
+			};
+			xhttp.open("GET", "/temperature", true);
+			xhttp.send();
+			//alert(xhttp.open());
+			
+		
+		}, 2000);
+		window.onload = function() {
+   pantalla = document.getElementById("screen");
+}
+
+
+
+
+	
+		// *** Gauge de la  temperatura ***
+	
+
+
+
+		
+	</script>
+			
+
+</body>
+</html>
